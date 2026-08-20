@@ -74,6 +74,15 @@ def curve_for_run(run_dir, beta, loader, device):
     return np.asarray(accs)
 
 
+def add_beta_colorbar(fig, ax, beta_min, beta_max):
+    cmap = plt.get_cmap("RdYlGn_r")
+    norm = matplotlib.colors.Normalize(vmin=beta_min, vmax=beta_max)
+    scalar_map = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+    colorbar = fig.colorbar(scalar_map, ax=ax, ticks=[beta_min, beta_max])
+    colorbar.set_label(r"$\beta$", rotation=90)
+    return cmap, norm
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--save_root", required=True)
@@ -99,15 +108,16 @@ def main():
         print(f"beta={beta:g} seed={seed}")
         by_beta[beta].append(curve_for_run(run_dir, beta, loader, device))
 
+    cmap, norm = add_beta_colorbar(fig, ax, min(by_beta), max(by_beta))
+
     for beta in sorted(by_beta):
         mean = np.stack(by_beta[beta]).mean(axis=0)
-        ax.plot(xs, mean, label=f"beta={beta:g}")
+        ax.plot(xs, mean, color=cmap(norm(beta)))
 
     ax.set_xlabel("Pruning Fraction", fontsize=axis_label_fontsize)
     ax.set_ylabel("Accuracy (%)", fontsize=axis_label_fontsize)
     ax.tick_params(axis="both", labelsize=tick_fontsize)
     ax.grid(True)
-    ax.legend(fontsize=legend_fontsize)
 
     fig.savefig(args.output)
     print(f"saved plot: {os.path.abspath(args.output)}")

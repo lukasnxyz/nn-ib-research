@@ -5,6 +5,4 @@ data/
 __pycache__/
 .ipynb_checkpoints/
 
-cnn_run.sh
-mlp_run.sh
 mrsync.sh
